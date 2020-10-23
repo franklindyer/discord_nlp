@@ -2,10 +2,10 @@ from discord.ext.commands import Bot
 import time, asyncio
 import markovify
 import re
+import sys
 
-TOKEN = 'NzY5MTk4NTM0OTg5MTg1MDc0.X5Lh9Q.x10Fdg5wROoyRHUoXVGKzfXD2F8'
-BOT_PREFIX = ["$"]
-client = Bot(command_prefix=BOT_PREFIX)
+TOKEN = sys.argv[1]
+client = Bot(command_prefix="$")
 
 client.HISTORY_LIMIT = 5000
 client.RE_STRING = '^[a-zA-Z0-9\s]+$'
