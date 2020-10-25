@@ -7,8 +7,8 @@ import sys
 TOKEN = sys.argv[1]
 client = Bot(command_prefix="$")
 
-client.HISTORY_LIMIT = 5000
-client.RE_STRING = '^[a-zA-Z0-9\s]+$'
+client.HISTORY_LIMIT = 20000
+client.RE_STRING = '^[a-zA-Z0-9\s\.,“”!\?/\(\)]+$'
 client.WORKING_HISTORIES = {}
 client.TEXT_MODELS = {}
 
@@ -24,11 +24,26 @@ async def on_message(message):
         for m in client.WORKING_HISTORIES[message.guild]: 
             if re.match(client.RE_STRING, m.content) and not m.author == client.user: 
                 fulltext += m.content + '\n'
-        client.TEXT_MODELS[message.guild] = markovify.NewlineText(fulltext)
+        client.TEXT_MODELS[message.guild] = markovify.NewlineText(fulltext, state_size=2)
         print("Done!")
         ## await message.channel.send("Markov model generated!")
-    if message.content == '$imitate':
-        imitation = client.TEXT_MODELS[message.guild].make_sentence(tries=100)
+    if re.match('^\$gather user=.+#[1-9]{4}$', message.content):
+        target_username = re.match('^\$gather user=(.+)#[1-9]{4}$', message.content)[1]
+        print("Conducting message scrape on user " + target_username + "...")
+        client.WORKING_HISTORIES[message.guild] = await message.channel.history(limit=client.HISTORY_LIMIT).flatten()
+        fulltext = ''
+        tick = 0
+        for m in client.WORKING_HISTORIES[message.guild]:
+            if re.match(client.RE_STRING, m.content) and m.author.name == target_username: 
+                fulltext += m.content + '\n'
+                tick += 1
+        print(tick)
+        client.TEXT_MODELS[message.guild] = markovify.NewlineText(fulltext, state_size=2)
+        print("Done!") 
+    if re.match('^\$imitate.*', message.content):
+        prompt = None
+        imitation = client.TEXT_MODELS[message.guild].make_sentence(tries=500)
+        print(imitation)
         if imitation:
             await message.channel.send(imitation)
 
